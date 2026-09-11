@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>極致甜感 — Gemini 茶道選壺大師</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 650px; margin: 20px auto; padding: 20px; line-height: 1.6; background-color: #fcfbfa; color: #333; }
+        h2 { border-bottom: 2px solid #8c6d46; padding-bottom: 8px; color: #5a4023; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #4a3b2c; }
+        input, select, textarea { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        
+        /* 按鈕樣式 */
+        .btn-main { background-color: #8c6d46; color: white; padding: 12px 15px; border: none; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        .btn-main:hover { background-color: #6e5434; }
+        .btn-secondary { background-color: #d1c7bd; color: #333; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-bottom: 10px; }
+        .btn-secondary:hover { background-color: #b8aba0; }
+        .btn-danger { background-color: #c94c4c; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+
+        /* 茶壺卡片清單 */
+        .pot-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; }
+        .pot-item { background: #f2eee9; border: 1px solid #e0d8ce; padding: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        .pot-info { font-size: 13px; color: #555; }
+        .pot-title { font-weight: bold; font-size: 15px; color: #333; }
+
+        #result { margin-top: 20px; padding: 20px; border: 1px solid #dcd3c8; border-radius: 5px; background-color: #ffffff; white-space: pre-wrap; font-size: 15px; }
+
+        /* Modal 彈出視窗樣式 */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .modal-header { font-weight: bold; font-size: 18px; margin-bottom: 15px; color: #5a4023; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .modal-footer { margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end; }
+        .close-btn { background: #aaa; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h2>🍵 甜感導向 — Gemini 茶道選壺系統</h2>
+
+    <div class="form-group">
+        <label for="teaType">今日預計沖泡茶種：</label>
+        <select id="teaType">
+            <option value="高山烏龍 / 輕發酵烏龍">高山烏龍 / 輕發酵烏龍（追求清甜、花香甜）</option>
+            <option value="熟普洱 / 老茶 / 黑茶">熟普洱 / 老茶 / 黑茶（追求醇甜、木質甘甜）</option>
+            <option value="凍頂烏龍 / 重焙火茶">凍頂烏龍 / 重焙火茶（追求焦糖甜、濃郁回甘）</option>
+            <option value="紅茶">紅茶（追求蜜香甜、水果甜）</option>
+            <option value="生普洱 / 白茶">生普洱 / 白茶（追求生津清甜）</option>
+            <option value="綠茶 / 龍井">綠茶 / 龍井（追求鮮甜、豆香甜）</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>您擁有的茶壺庫存：</label>
+        <button class="btn-secondary" onclick="openModal()">➕ 新增 / 管理茶壺庫存</button>
+        <div id="potListDisplay" class="pot-list">
+            <!-- 動態渲染茶壺清單 -->
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="weather">今日天氣：</label>
+        <select id="weather">
+            <option value="晴朗乾燥">晴朗乾燥</option>
+            <option value="晴朗炎熱">晴朗炎熱</option>
+            <option value="多雲陰天">多雲陰天</option>
+            <option value="陰雨潮濕">陰雨潮濕（濕氣重，香氣易沉）</option>
+            <option value="寒冷低溫">寒冷低溫（降溫快，影響萃取）</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="humidity">相對濕度 (%)：</label>
+        <input type="number" id="humidity" value="70" min="0" max="100">
+    </div>
+
+    <button class="btn-main" onclick="getRecommendation()">評估氣候與茶道邏輯・推薦最佳甜感茶壺</button>
+
+    <h3>推薦與評估報告：</h3>
+    <div id="result">請填寫資訊後點擊按鈕，Gemini 將為您進行專業茶道評估...</div>
+
+    <!-- 彈出式視窗 (Modal) -->
+    <div id="potModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">新增茶壺詳細參數</div>
+            
+            <div class="form-group">
+                <label for="potName">* 茶壺名稱或暱稱（必填）：</label>
+                <input type="text" id="potName" placeholder="例如：朱泥小西施、老紫泥石瓢">
+            </div>
+
+            <div class="form-group">
+                <label for="potMaterial">泥料 / 材質（可空白）：</label>
+                <input type="text" id="potMaterial" placeholder="例如：朱泥、紫泥、段泥、底槽青、白瓷、鐵壺">
+            </div>
+
+            <div class="form-group">
+                <label for="potThickness">胎體厚薄（可空白）：</label>
+                <select id="potThickness">
+                    <option value="">未指定</option>
+                    <option value="薄胎（散熱快、揚香高）">薄胎（散熱快、揚香高）</option>
+                    <option value="中等厚度">中等厚度</option>
+                    <option value="厚胎（保溫強、聚熱佳）">厚胎（保溫強、聚熱佳）</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="potFiring">燒製方法 / 結晶度（可空白）：</label>
+                <select id="potFiring">
+                    <option value="">未指定</option>
+                    <option value="高溫燒製/高結晶（透氣低、發香強）">高溫燒製/高結晶（透氣低、發香強）</option>
+                    <option value="中溫燒製/適度結晶">中溫燒製/適度結晶</option>
+                    <option value="柴燒/降坡/低結晶（雙氣孔顯著、修飾苦澀）">柴燒/降坡/低結晶（雙氣孔顯著、修飾苦澀）</option>
+                    <option value="捂灰/特殊氧化還原">捂灰/特殊氧化還原</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="potCapacity">容量 (cc)（可空白）：</label>
+                <input type="number" id="potCapacity" placeholder="例如：150">
+            </div>
+
+            <div class="form-group">
+                <label for="potSpout">出水孔型態（可空白）：</label>
+                <select id="potSpout">
+                    <option value="">未指定</option>
+                    <option value="單孔（出水極快、高衝）">單孔（出水極快、高衝）</option>
+                    <option value="網孔（標準出水）">網孔（標準出水）</option>
+                    <option value="球孔（順暢、不容易阻塞）">球孔（順暢、不容易阻塞）</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="potShape">壺型結構特性（可空白）：</label>
+                <input type="text" id="potShape" placeholder="例如：高身（聚熱）、矮身高口（散熱）、扁壺">
+            </div>
+
+            <div class="modal-footer">
+                <button class="close-btn" onclick="closeModal()">取消</button>
+                <button class="btn-main" style="width:auto;" onclick="savePot()">儲存茶壺</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GEMINI_API_KEY = "AQ.Ab8RN6KhRsd0KGuH3jHvQ-mpjcUuptDqzKMO-_hTtCnbTJmloA";
+        let myPots = [];
+
+        // 初始化：載入本地記憶資料
+        window.onload = function() {
+            const savedPots = localStorage.getItem('my_pots_detail');
+            if (savedPots) {
+                myPots = JSON.parse(savedPots);
+            } else {
+                // 預設範例
+                myPots = [
+                    { name: '朱泥西施', material: '朱泥', thickness: '薄胎（散熱快、揚香高）', firing: '高溫燒製/高結晶（透氣低、發香強）', capacity: '120', spout: '網孔（標準出水）', shape: '矮身' },
+                    { name: '底槽青石瓢', material: '底槽青', thickness: '厚胎（保溫強、聚熱佳）', firing: '柴燒/降坡/低結晶（雙氣孔顯著、修飾苦澀）', capacity: '200', spout: '網孔（標準出水）', shape: '三角梯形' }
+                ];
+            }
+            renderPotList();
+        };
+
+        // Modal 控制
+        function openModal() {
+            document.getElementById('potModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('potModal').style.display = 'none';
+            clearModalInputs();
+        }
+
+        function clearModalInputs() {
+            document.getElementById('potName').value = '';
+            document.getElementById('potMaterial').value = '';
+            document.getElementById('potThickness').value = '';
+            document.getElementById('potFiring').value = '';
+            document.getElementById('potCapacity').value = '';
+            document.getElementById('potSpout').value = '';
+            document.getElementById('potShape').value = '';
+        }
+
+        // 新增茶壺
+        function savePot() {
+            const name = document.getElementById('potName').value.trim();
+            if (!name) {
+                alert('請輸入茶壺名稱！');
+                return;
+            }
+
+            const newPot = {
+                name: name,
+                material: document.getElementById('potMaterial').value.trim(),
+                thickness: document.getElementById('potThickness').value,
+                firing: document.getElementById('potFiring').value,
+                capacity: document.getElementById('potCapacity').value.trim(),
+                spout: document.getElementById('potSpout').value,
+                shape: document.getElementById('potShape').value.trim()
+            };
+
+            myPots.push(newPot);
+            localStorage.setItem('my_pots_detail', JSON.stringify(myPots));
+            renderPotList();
+            closeModal();
+        }
+
+        // 刪除茶壺
+        function deletePot(index) {
+            myPots.splice(index, 1);
+            localStorage.setItem('my_pots_detail', JSON.stringify(myPots));
+            renderPotList();
+        }
+
+        // 渲染茶壺清單至畫面
+        function renderPotList() {
+            const container = document.getElementById('potListDisplay');
+            if (myPots.length === 0) {
+                container.innerHTML = '<div style="color:#888; font-size:14px;">尚無茶壺庫存，請點擊上方按鈕新增。</div>';
+                return;
+            }
+
+            container.innerHTML = myPots.map((pot, index) => {
+                let details = [];
+                if (pot.material) details.push(pot.material);
+                if (pot.capacity) details.push(`${pot.capacity}cc`);
+                if (pot.thickness) details.push(pot.thickness.split('（')[0]);
+                if (pot.firing) details.push(pot.firing.split('（')[0]);
+
+                return `
+                    <div class="pot-item">
+                        <div>
+                            <div class="pot-title">${pot.name}</div>
+                            <div class="pot-info">${details.join(' | ') || '無詳細參數'}</div>
+                        </div>
+                        <button class="btn-danger" onclick="deletePot(${index})">刪除</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 呼叫 Gemini 推薦
+        async function getRecommendation() {
+            const teaType = document.getElementById('teaType').value;
+            const weather = document.getElementById('weather').value;
+            const humidity = document.getElementById('humidity').value;
+            const resultDiv = document.getElementById('result');
+
+            if (myPots.length === 0) {
+                alert('請先新增至少一把茶壺庫存！');
+                return;
+            }
+
+            resultDiv.innerText = '茶道大師 Gemini 正在分析泥料氣孔、胎體保溫度、出水流速與天氣氣壓，請稍候...';
+
+            // 將茶壺物件陣列轉為結構化 Prompt 格式
+            const potsDescription = myPots.map((p, i) => {
+                return `【茶壺 ${i+1}】：${p.name}
+  - 泥料材質: ${p.material || '未註明'}
+  - 胎體厚薄: ${p.thickness || '未註明'}
+  - 燒製方法/結晶度: ${p.firing || '未註明'}
+  - 容量: ${p.capacity ? p.capacity + 'cc' : '未註明'}
+  - 出水孔型: ${p.spout || '未註明'}
+  - 壺型結構: ${p.shape || '未註明'}`;
+            }).join('\n\n');
+
+            const prompt = `
+你是一位精通泥料物理特性（紫砂雙氣孔、結晶度、保溫性、吸水率）、氣候物理效應（濕度、氣壓對發茶性的影響）以及沖泡手法（湯感修飾與可溶性糖萃取）的資深茶藝大師。
+
+【使用者偏好】：
+- **極致核心目標**：使用者偏好**「將茶泡得甜感較重（甘甜、潤甜、蜜甜、回甘強烈）」**。
+
+【今日客觀條件】：
+- **預計沖泡茶種**：${teaType}
+- **今日天氣**：${weather}
+- **當前環境濕度**：${humidity}%
+
+【使用者擁有的茶壺庫存（包含詳細物理參數）】：
+${potsDescription}
+
+---
+
+【任務指令】：
+請根據「極致甜感」原則，結合今日天氣與濕度對發茶的影響，從使用者提供的茶壺中挑選【今日最佳茶壺】，並依以下結構詳細評估：
+
+1. 🏆【今日最佳甜感茶壺】
+   - 清楚明確指出選中的茶壺名稱。
+
+2. 🔬【泥料、胎體與氣候的甜感邏輯分析】
+   - **泥料與結晶度**：分析該壺泥料結晶度與氣孔結構，如何幫助釋放可溶性糖或修飾苦澀感？
+   - **胎體與容量保溫性**：針對胎體厚薄與容量，說明其保溫特性如何影響今日環境溫度/濕度下的萃取率。
+   - **氣候物理影響**：針對今日的天氣 (${weather}) 與濕度 (${humidity}%)，說明該茶壺如何克服或利用這個氣候條件來維持湯感的甜度。
+
+3. 🫖【「甜感最大化」沖泡與注水手法建議】
+   - **水溫與溫壺技巧**：如何利用水溫與胎體熱容量激發甜度？
+   - **注水方式與出水速度**：結合該壺出水孔型與壺型結構，建議最佳注水線條（如：高沖、低斟、定點細水）與出水節奏。
+
+4. 💡【備選方案】
+   - 若使用者想嘗試另一種不同風格的甜感（例如：鮮甜 vs 潤甜），可從庫存中推薦第二順位茶壺並簡述原因。
+`;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    resultDiv.innerText = data.candidates[0].content.parts[0].text;
+                } else {
+                    resultDiv.innerText = '生成失敗，請檢查 API Key 是否有效。\n' + JSON.stringify(data);
+                }
+            } catch (error) {
+                resultDiv.innerText = '連線發生錯誤：' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
